@@ -3,7 +3,13 @@ const contract = new web3.eth.Contract(abi, '0x394c3D5990cEfC7Be36B82FDB07a7251A
 
 export async function searchTokens(query) {
     if (web3.utils.isAddress(query)) {        
-        return await getTokenData(query) || [];
+        const token = await getTokenData(query);
+        if (token) {
+            displayTokenInfo(token);
+            return [token]; // Return as an array for consistency
+        } else {
+            return [];
+        }
     } else {
         return [];
     }
@@ -11,13 +17,12 @@ export async function searchTokens(query) {
 
 async function getTokenData(tokenAddress) {
     try {
-        const tokenParent = await contract.methods.GetStandardTokenParent(tokenAddress).call() || null;
-        
+        const tokenParent = await contract.methods.GetStandardTokenParent(tokenAddress).call();
         return {
             address: tokenAddress,
             parent: tokenParent,
         };
-    } catch (error) {
+    } catch (error){
         console.error("Error getting token data:", error);
         return null;
     }    
@@ -34,4 +39,37 @@ async function getChildrenTokens(tokenAddress) {
         }
     }
     return children;
+}
+
+function displayTokenInfo(token) {
+    const tokenNameElement = document.getElementById('tokenName');
+    const tokenSymbolElement = document.getElementById('tokenSymbol');
+    const tokenAddressElement = document.getElementById('tokenAddress');
+    const parentAddressElement = document.getElementById('parentAddress');
+    const parentExplorerLink = document.getElementById('parentExplorerLink');
+    const tokenExplorerLink = document.getElementById('tokenExplorerLink');
+    const parentTokenInfoDiv = document.getElementById('parentTokenInfo');
+    const noParentInfoDiv = document.getElementById('noParentInfo');
+
+    if (token) {
+        tokenNameElement.textContent = token.name || 'Unknown';
+        tokenSymbolElement.textContent = token.symbol || 'Unknown';
+        tokenAddressElement.textContent = token.address;
+
+        const explorerUrl = `https://example.com/explorer/token/${token.address}`; // Replace with actual explorer URL
+        tokenExplorerLink.href = explorerUrl;
+        tokenExplorerLink.textContent = token.address;
+
+        if (token.parent === '0x0000000000000000000000000000000000000000') {
+            parentTokenInfoDiv.style.display = 'none';
+            noParentInfoDiv.style.display = 'block';
+        } else {
+            parentTokenInfoDiv.style.display = 'block';
+            noParentInfoDiv.style.display = 'none';
+            parentAddressElement.textContent = token.parent;
+            const parentUrl = `https://example.com/explorer/token/${token.parent}`; // Replace with actual explorer URL
+            parentExplorerLink.href = parentUrl;
+            parentExplorerLink.textContent = token.parent;
+        }
+    }
 }
