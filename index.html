@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            Atropa Token Family Explorer - PulseChain Token Relationships
+        </title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css"
+        />
+        <style>
+            :root {
+                --primary-color: #6f42c1;
+                --secondary-color: #6610f2;
+                --background-color: #f8f9fa;
+                --card-bg: #ffffff;
+                --highlight-color: #17a2b8;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: var(--background-color);
+                color: #333;
+            }
+
+            .navbar {
+                background-color: var(--primary-color);
+            }
+
+            .navbar-brand,
+            .nav-link {
+                color: white !important;
+            }
+
+            .hero-section {
+                background-color: var(--primary-color);
+                color: white;
+                padding: 3rem 0;
+                margin-bottom: 2rem;
+            }
+
+            .search-container {
+                background-color: var(--card-bg);
+                border-radius: 10px;
+                padding: 2rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                margin-bottom: 2rem;
+            }
+
+            .token-card {
+                background-color: var(--card-bg);
+                border-radius: 10px;
+                padding: 1.5rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                margin-bottom: 1.5rem;
+                transition: transform 0.3s ease;
+            }
+
+            .token-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .relationship-card {
+                background-color: #f0f0ff;
+                border-left: 4px solid var(--primary-color);
+            }
+
+            .token-address {
+                font-family: monospace;
+                background-color: #f5f5f5;
+                padding: 0.2rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.9rem;
+            }
+
+            .search-btn {
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+
+            .search-btn:hover {
+                background-color: var(--secondary-color);
+                border-color: var(--secondary-color);
+            }
+
+            .relationship-tree {
+                margin: 2rem 0;
+            }
+
+            .tree-node {
+                padding: 0.5rem;
+                margin: 0.5rem 0;
+                border-radius: 5px;
+            }
+
+            .parent-node {
+                background-color: #e2d9f3;
+                border-left: 4px solid #7952b3;
+            }
+
+            .current-node {
+                background-color: #d1ecf1;
+                border-left: 4px solid #0dcaf0;
+            }
+
+            .child-node {
+                background-color: #d4edda;
+                border-left: 4px solid #28a745;
+            }
+
+            .tree-connector {
+                border-left: 2px dashed #6c757d;
+                height: 20px;
+                margin-left: 10px;
+            }
+
+            footer {
+                background-color: #343a40;
+                color: white;
+                padding: 1.5rem 0;
+                margin-top: 3rem;
+            }
+
+            .loading-spinner {
+                display: none;
+            }
+
+            .parent-token-name {
+                font-weight: bold;
+                color: var(--highlight-color);
+                cursor: pointer;
+                text-decoration: underline;
+            }
+
+            .explorer-link {
+                color: var(--secondary-color);
+                margin-left: 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .explorer-link:hover {
+                color: var(--primary-color);
+                text-decoration: underline;
+            }
+
+            .badge-parent {
+                background-color: var(--highlight-color);
+                color: white;
+                font-size: 0.8rem;
+                padding: 0.3rem 0.5rem;
+                border-radius: 4px;
+                margin-right: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#"
+                    >Atropa Token Family Explorer</a
+                >
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#search">Search</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#about">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#features">Features</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="container text-center">
+                <h1>Atropa Token Family Explorer</h1>
+                <p class="lead">
+                    Search and explore parent-child relationships between tokens
+                    created by the factory
+                </p>
+            </div>
+        </section>
+
+        <!-- Search Section -->
+        <section id="search" class="container mb-5">
+            <div class="search-container">
+                <h2 class="mb-4">Search Tokens</h2>
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="input-group mb-3">
+                            <input
+                                type="text"
+                                id="searchInput"
+                                class="form-control"
+                                placeholder="Enter token address, name, or symbol..."
+                            />
+                            <button
+                                class="btn search-btn text-white"
+                                type="button"
+                                id="searchButton"
+                            >
+                                <span
+                                    class="spinner-border spinner-border-sm loading-spinner"
+                                    role="status"
+                                    aria-hidden="true"
+                                ></span>
+                                <span class="search-text">Search</span>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Example: 0x38D47E9bc2fF68F168B5308d3e12e6deD96DB1F4
+                            or 0xF5644D3a0Aa516066D5DA9C1a67603Ed47a81757
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div id="searchResults" class="mt-4" style="display: none">
+                <h3 class="mb-3">Search Results</h3>
+
+                <!-- Token Information Card -->
+                <div class="token-card">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 id="tokenName">Token Name</h4>
+                            <p>
+                                <strong>Symbol:</strong>
+                                <span id="tokenSymbol">SYMBOL</span>
+                            </p>
+                            <p>
+                                <strong>Address:</strong>
+                                <span id="tokenAddress" class="token-address"
+                                    >0x0000000000000000000000000000000000000000</span
+                                >
+                                <button
+                                    class="btn btn-sm btn-outline-secondary copy-btn"
+                                    data-clipboard-target="#tokenAddress"
+                                >
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                                <a
+                                    id="tokenExplorerLink"
+                                    href="#"
+                                    target="_blank"
+                                    class="explorer-link"
+                                >
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                    View on Midgard
+                                </a>
+                            </p>
+                            <p>
+                                <strong>Decimals:</strong>
+                                <span id="tokenDecimals">18</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="relationship-card p-3">
+                                <h5>
+                                    <span class="badge-parent"
+                                        >PARENT TOKEN</span
+                                    >
+                                </h5>
+                                <div id="parentTokenInfo">
+                                    <p>
+                                        <strong>Name:</strong>
+                                        <span
+                                            id="parentName"
+                                            class="parent-token-name"
+                                            >Parent Token Name</span
+                                        >
+                                    </p>
+                                    <p>
+                                        <strong>Address:</strong>
+                                        <span
+                                            id="parentAddress"
+                                            class="token-address"
+                                            >0x0000000000000000000000000000000000000000</span
+                                        >
+                                        <button
+                                            class="btn btn-sm btn-outline-secondary copy-btn"
+                                            data-clipboard-target="#parentAddress"
+                                        >
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        <a
+                                            id="parentExplorerLink"
+                                            href="#"
+                                            target="_blank"
+                                            class="explorer-link"
+                                        >
+                                            <i
+                                                class="bi bi-box-arrow-up-right"
+                                            ></i>
+                                            View on Midgard
+                                        </a>
+                                    </p>
+                                </div>
+                                <div id="noParentInfo" style="display: none">
+                                    <p>This token has no parent.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Child Tokens Section -->
+                <div id="childTokensSection">
+                    <h4 class="mb-3">
+                        <span class="badge-parent">CHILD TOKENS</span>
+                    </h4>
+                    <div id="childTokensList">
+                        <!-- Child tokens will be dynamically added here -->
+                    </div>
+                    <div id="noChildrenInfo" style="display: none">
+                        <p>This token has no child tokens.</p>
+                    </div>
+                </div>
+
+                <!-- Relationship Tree Visualization -->
+                <div class="relationship-tree">
+                    <h4 class="mb-3">Relationship Tree</h4>
+                    <div id="treeVisualization">
+                        <!-- Tree visualization will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div
+                id="noResults"
+                class="alert alert-info mt-4"
+                style="display: none"
+            >
+                No tokens found matching your search criteria.
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="container mb-5">
+            <h2 class="mb-4">Features</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="token-card h-100">
+                        <h3><i class="bi bi-search me-2"></i>Token Search</h3>
+                        <p>
+                            Look up information about tokens created by the
+                            factory using address, name, or symbol.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="token-card h-100">
+                        <h3>
+                            <i class="bi bi-diagram-3 me-2"></i>Relationship
+                            Tracking
+                        </h3>
+                        <p>
+                            Track parent-child relationships between tokens to
+                            understand their hierarchical structure.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="token-card h-100">
+                        <h3>
+                            <i class="bi bi-graph-up me-2"></i>Visualization
+                        </h3>
+                        <p>
+                            Visualize token relationship networks to better
+                            understand token families.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="token-card h-100">
+                        <h3>
+                            <i class="bi bi-file-earmark-arrow-down me-2"></i
+                            >Explorer Integration
+                        </h3>
+                        <p>
+                            Direct links to Midgard Explorer for each token to
+                            view detailed blockchain information.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="container mb-5">
+            <div class="token-card">
+                <h2 class="mb-4">About</h2>
+                <p>
+                    The Atropa Token Family Explorer is a specialized tool for
+                    tracking tokens created by the token factory at address
+                    <span class="token-address"
+                        >0x394c3D5990cEfC7Be36B82FDB07a7251ACe61cc7</span
+                    >
+                    on the PulseChain network.
+                </p>
+                <p>
+                    The token factory maintains parent-child relationships
+                    through the <code>GetStandardTokenParent</code> function,
+                    which takes a token address and returns its parent address.
+                </p>
+                <p>
+                    This tool allows you to search for tokens created by wallet
+                    <span class="token-address"
+                        >0xBF182955401aF3f2f7e244cb31184E93E74a2501</span
+                    >
+                    and explore their parent-child relationships.
+                </p>
+                <p>
+                    The database includes tokens specifically requested by
+                    users, including
+                    <span class="token-address"
+                        >0x38D47E9bc2fF68F168B5308d3e12e6deD96DB1F4</span
+                    >,
+                    <span class="token-address"
+                        >0xF5644D3a0Aa516066D5DA9C1a67603Ed47a81757</span
+                    >, and many others from the Atropa ecosystem.
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="container text-center">
+                <p>Atropa Token Family Explorer &copy; 2025</p>
+            </div>
+        </footer>
+
+        <!-- JavaScript -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+        <script src="js/token_data.js"></script>
+        <script src="js/app.js"></script>
+        <footer-btn></footer-btn>
+        <script>
+            // 定义自定义元素
+            class FooterBtn extends HTMLElement {
+                constructor() {
+                    super();
+                    // 创建 Shadow DOM
+                    const shadow = this.attachShadow({ mode: "open" });
+                    // 创建组件的HTML结构
+                    const wrapper = document.createElement("div");
+                    wrapper.setAttribute("class", "wrapper");
+                    // 添加一些内容到组件中
+                    wrapper.innerHTML = `
+                <div class="page-footer">
+                    <div class="tooltip-dialog">Not an official Manus website nor endorsed by Manus. Content may contain inaccuracies; double-check before use. Do not submit passwords, credit cards, or personal information.</div>
+                    <div class="footer-close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <g clip-path="url(#clip0_5850_97234)">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0.733398 8.00104C0.733398 3.98777 3.9868 0.734375 8.00006 0.734375C12.0133 0.734375 15.2667 3.98777 15.2667 8.00104C15.2667 12.0143 12.0133 15.2677 8.00006 15.2677C3.9868 15.2677 0.733398 12.0143 0.733398 8.00104Z" fill="white"/>
+                        <path d="M1.2334 8.00104C1.2334 4.26391 4.26294 1.23438 8.00006 1.23438C11.7372 1.23438 14.7667 4.26391 14.7667 8.00104C14.7667 11.7382 11.7372 14.7677 8.00006 14.7677C4.26294 14.7677 1.2334 11.7382 1.2334 8.00104Z" stroke="black" stroke-opacity="0.14" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M5.57576 5.57613C5.81007 5.34181 6.18997 5.34181 6.42429 5.57613L8.00002 7.15186L9.57576 5.57613C9.81007 5.34181 10.19 5.34181 10.4243 5.57613C10.6586 5.81044 10.6586 6.19034 10.4243 6.42465L8.84855 8.00039L10.4243 9.57613C10.6586 9.81044 10.6586 10.1903 10.4243 10.4247C10.19 10.659 9.81007 10.659 9.57576 10.4247L8.00002 8.84892L6.42429 10.4247C6.18997 10.659 5.81007 10.659 5.57576 10.4247C5.34145 10.1903 5.34145 9.81044 5.57576 9.57613L7.1515 8.00039L5.57576 6.42465C5.34145 6.19034 5.34145 5.81044 5.57576 5.57613Z" fill="#858481"/>
+                        </g>
+                        <defs>
+                        <clipPath id="clip0_5850_97234">
+                        <rect width="16" height="16" fill="white"/>
+                        </clipPath>
+                        </defs>
+                        </svg>
+                    </div>
+                    <div class="footer-bg">
+                        <div class="tooltip-box">
+                            <div class="tooltip-desc">This user-generated website was created with AI. Use with caution.</div>
+                            <span
+                                class="tooltip-icon"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                    <g clip-path="url(#clip0_4345_83044)">
+                                        <path
+                                            d="M6 8V6M6 4H6.005M11 6C11 8.76142 8.76142 11 6 11C3.23858 11 1 8.76142 1 6C1 3.23858 3.23858 1 6 1C8.76142 1 11 3.23858 11 6Z"
+                                            stroke="#858481"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_4345_83044">
+                                            <rect width="12" height="12" fill="white" />
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="https://manus.im/invitation?from=space" target="_blank" class="footer-button">
+                        <span class="footer-logo">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                <path
+                                    d="M13.2251 16.9379C14.4717 16.147 15.3336 11.9052 15.144 10.6421C15.144 10.6421 14.9464 9.96396 14.4643 9.96394C13.9821 9.96391 13.7815 10.4719 13.7815 10.4719C13.7815 10.4719 13.6546 10.9409 13.4555 11.5313C13.1474 12.4447 13.0178 13.5718 12.2143 13.8571C11.4107 14.1425 10.6071 13.8725 10.6071 13.8725C11.1535 15.9448 11.9785 17.7288 13.2251 16.9379Z"
+                                    fill="white"
+                                />
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M7.04826 9.17689C6.59029 9.22824 6.34906 9.40136 6.26768 9.48274C5.94625 9.80417 5.78554 10.1256 5.78554 10.2863C5.78554 10.447 5.40745 9.53393 5.32437 9.44837C5.07703 9.19366 5.083 8.78667 5.33771 8.53933C5.69527 8.19212 6.28003 7.96925 6.90502 7.89918C7.55323 7.82651 8.3219 7.9075 9.09971 8.25205C10.0075 8.65415 10.4937 9.50199 10.6773 10.2768C10.7705 10.6701 10.7943 11.0743 10.7466 11.4426C10.7002 11.8002 10.5781 12.1826 10.3242 12.4736C9.79525 13.0799 9.01508 13.0116 8.593 12.9221C8.35518 12.8716 8.14542 12.7975 7.99786 12.738C7.92303 12.7079 7.86158 12.6804 7.81747 12.6597C7.79535 12.6493 7.77743 12.6406 7.7642 12.6341C7.75757 12.6308 7.75211 12.628 7.74786 12.6259L7.7424 12.6231L7.74037 12.622L7.73915 12.6214C7.73915 12.6214 7.7388 12.6212 8.03568 12.051L7.7388 12.6212C7.42389 12.4573 7.30152 12.069 7.46548 11.7541C7.62912 11.4398 8.01612 11.3173 8.3307 11.4798M8.3307 11.4798L8.33145 11.4802L8.3307 11.4798ZM8.3307 11.4798L8.33531 11.4822C8.34052 11.4847 8.3498 11.4893 8.36271 11.4953C8.38864 11.5075 8.42852 11.5254 8.4788 11.5457C8.58146 11.5871 8.71705 11.6341 8.85982 11.6644C9.19892 11.7363 9.32081 11.668 9.3554 11.6284C9.38325 11.5965 9.44396 11.4899 9.47154 11.2773C9.49771 11.0755 9.48663 10.8281 9.42625 10.5733C9.30267 10.0519 9.00685 9.61712 8.57899 9.42759C8.02117 9.1805 7.48301 9.12815 7.04826 9.17689"
+                                    fill="white"
+                                />
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M2.79812 2.53348C2.64176 2.85224 2.7734 3.2374 3.09216 3.39376C3.55 3.61834 3.94731 3.83979 4.34068 4.28331C4.57627 4.54892 4.98258 4.57326 5.2482 4.33767C5.51381 4.10208 5.53815 3.69577 5.30256 3.43016C4.742 2.79815 4.16499 2.48794 3.65839 2.23944C3.33963 2.08308 2.95448 2.21473 2.79812 2.53348Z"
+                                    fill="white"
+                                />
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M6.27275 0.662519C5.92831 0.748629 5.71889 1.09766 5.805 1.4421C5.86516 1.68274 5.92127 1.8885 5.97263 2.07686C6.07093 2.43738 6.15185 2.73415 6.21054 3.08969C6.26837 3.43999 6.59923 3.67708 6.94952 3.61926C7.29982 3.56143 7.53692 3.23058 7.47909 2.88028C7.40972 2.46006 7.3017 2.06246 7.19328 1.66338C7.14526 1.48666 7.09717 1.30966 7.05233 1.13
