@@ -459,6 +459,11 @@
         <script src="js/app.js"></script>
         <footer-btn></footer-btn>
         <script>
+            import { searchTokens } from './js/app.js';
+
+            // Call searchTokens and log the result
+            const results = searchTokens('atro');
+            console.log(results);
             // 定义自定义元素
             class FooterBtn extends HTMLElement {
                 constructor() {
